@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Banner Spelling Checker</title>
+    <link rel="icon" href="{{ url_for('static', filename='spell-check.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .app-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .app-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .app-subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .banner-preview {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .banner-preview:hover {
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        
+        .word-container {
+            margin-top: 2rem;
+        }
+        
+        .word-item {
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .word-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+        
+        .correct {
+            border-left: 5px solid #4cc9f0;
+        }
+        
+        .incorrect {
+            border-left: 5px solid #f72585;
+        }
+        
+        .suggestion {
+            color: #4cc9f0;
+            font-weight: bold;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 1rem auto;
+            display: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: rgba(67, 97, 238, 0.03);
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.08);
+        }
+        
+        .upload-area i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .tabs {
+            margin-bottom: 1.5rem;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .extracted-text-container {
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .extracted-text {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.25rem;
+            white-space: pre-line;
+            font-size: 1.1rem;
+        }
+        
+        .edit-text-btn {
+            margin-top: 0.75rem;
+        }
+        
+        .spelling-analysis {
+            margin-top: 1.5rem;
+            white-space: pre-line;
+        }
+        
+        .misspelled-word {
+            color: var(--danger-color);
+            text-decoration: underline;
+            text-decoration-style: wavy;
+            text-decoration-color: var(--danger-color);
+        }
+        
+        .correct-word {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .analysis-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.75rem;
+            margin-top: 1.75rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .ai-badge {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--success-color) 100%);
+            color: white;
+            font-weight: bold;
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .ai-badge i {
+            margin-right: 0.3rem;
+        }
+        
+        .results-summary {
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .feature-list {
+            margin: 1.5rem 0;
+        }
+        
+        .feature-list li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .instructions {
+            background-color: rgba(76, 201, 240, 0.1);
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        /* Footer styling */
+        footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+        }
+        
+        footer p {
+            color: #6c757d;
+        }
+        
+        .developer-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1 class="app-title">Social Media Banner Spelling Checker <span class="ai-badge"><i class="bi bi-lightning-fill"></i>AI Powered</span></h1>
+            <p class="app-subtitle">Check spelling in your social media content with advanced AI technology</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-10 offset-md-1">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <ul class="nav nav-tabs tabs" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-input" type="button" role="tab" aria-controls="text-input" aria-selected="true"><i class="bi bi-type"></i> Text Input</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="image-tab" data-bs-toggle="tab" data-bs-target="#image-input" type="button" role="tab" aria-controls="image-input" aria-selected="false"><i class="bi bi-image"></i> Image Upload</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="inputTabsContent">
+                            <!-- Text Input Tab -->
+                            <div class="tab-pane fade show active" id="text-input" role="tabpanel" aria-labelledby="text-tab">
+                                <div class="instructions">
+                                    <h5><i class="bi bi-info-circle"></i> How to use:</h5>
+                                    <ol class="feature-list">
+                                        <li>Enter your social media text in the box below</li>
+                                        <li>Click "Check Spelling" to analyze</li>
+                                        <li>Review the results showing any misspelled words</li>
+                                    </ol>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="bannerText" class="form-control mb-3" rows="3" placeholder="Enter your social media banner text here..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Upload Tab -->
+                            <div class="tab-pane fade" id="image-input" role="tabpanel" aria-labelledby="image-tab">
+                                <div class="instructions">
+                                    <h5><i class="bi bi-info-circle"></i> How to use:</h5>
+                                    <ol class="feature-list">
+                                        <li>Upload an image containing text (social media banner, ad, etc.)</li>
+                                        <li>Our AI will extract the text automatically</li>
+                                        <li>Review extracted text and spelling analysis</li>
+                                    </ol>
+                                </div>
+                                <div class="upload-area" id="uploadArea">
+                                    <input type="file" id="imageUpload" accept=".jpg,.jpeg,.png" style="display: none;">
+                                    <div>
+                                        <i class="bi bi-cloud-arrow-up"></i>
+                                        <p class="mb-2">Click to upload or drag and drop</p>
+                                        <p class="text-muted small">Supported formats: JPG, JPEG, PNG</p>
+                                    </div>
+                                </div>
+                                <img id="imagePreview" class="image-preview" alt="Uploaded image preview">
+                                
+                                <div id="analysisContainer" class="analysis-section" style="display: none;">
+                                    <h5><i class="bi bi-magic"></i> AI Analysis Results</h5>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-lightning-fill"></i> Our AI has analyzed your image and identified the text and any spelling mistakes.
+                                    </div>
+                                    
+                                    <div id="extractedTextContainer" class="extracted-text-container">
+                                        <h6><i class="bi bi-text-paragraph"></i> Extracted Text:</h6>
+                                        <div id="extractedText" class="extracted-text"></div>
+                                        <button id="editExtractedText" class="btn btn-sm btn-outline-primary edit-text-btn">
+                                            <i class="bi bi-pencil"></i> Edit Text
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="spellingAnalysisContainer" class="mt-4">
+                                        <h6><i class="bi bi-spellcheck"></i> Spelling Analysis:</h6>
+                                        <div id="spellingAnalysis" class="spelling-analysis"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="banner-preview mb-3" id="bannerPreview">
+                            Your banner text will appear here
+                        </div>
+                        <button id="checkSpelling" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-check-circle"></i> Check Spelling
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Analyzing your text with AI...</p>
+                </div>
+                
+                <div class="word-container" id="wordResults">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="mt-5 py-3 text-center">
+        <div class="container">
+            <p class="mb-1">Developed by <span class="developer-name">Shamim MD Jony</span></p>
+            <p class="small mb-0">&copy; 2025 All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <!-- Edit Text Modal -->
+    <div class="modal fade" id="editTextModal" tabindex="-1" aria-labelledby="editTextModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTextModalLabel">Edit Extracted Text</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="editedText" class="form-control" rows="6"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveEditedText">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const bannerText = document.getElementById('bannerText');
+            const bannerPreview = document.getElementById('bannerPreview');
+            const checkSpellingBtn = document.getElementById('checkSpelling');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const wordResults = document.getElementById('wordResults');
+            
+            // Image upload elements
+            const uploadArea = document.getElementById('uploadArea');
+            const imageUpload = document.getElementById('imageUpload');
+            const imagePreview = document.getElementById('imagePreview');
+            const analysisContainer = document.getElementById('analysisContainer');
+            const extractedTextContainer = document.getElementById('extractedTextContainer');
+            const extractedText = document.getElementById('extractedText');
+            const spellingAnalysisContainer = document.getElementById('spellingAnalysisContainer');
+            const spellingAnalysis = document.getElementById('spellingAnalysis');
+            
+            // Edit text elements
+            const editExtractedText = document.getElementById('editExtractedText');
+            const editTextModal = new bootstrap.Modal(document.getElementById('editTextModal'));
+            const editedText = document.getElementById('editedText');
+            const saveEditedText = document.getElementById('saveEditedText');
+            
+            let currentText = '';
+            
+            // Update banner preview as user types
+            bannerText.addEventListener('input', function() {
+                currentText = this.value;
+                bannerPreview.textContent = currentText || 'Your banner text will appear here';
+            });
+            
+            // Image upload handling
+            uploadArea.addEventListener('click', function() {
+                imageUpload.click();
+            });
+            
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#4361ee';
+                this.style.backgroundColor = 'rgba(67, 97, 238, 0.08)';
+            });
+            
+            uploadArea.addEventListener('dragleave', function() {
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'rgba(67, 97, 238, 0.03)';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'rgba(67, 97, 238, 0.03)';
+                
+                if (e.dataTransfer.files.length) {
+                    imageUpload.files = e.dataTransfer.files;
+                    handleImageUpload();
+                }
+            });
+            
+            imageUpload.addEventListener('change', handleImageUpload);
+            
+            // Edit extracted text
+            editExtractedText.addEventListener('click', function() {
+                editedText.value = currentText;
+                editTextModal.show();
+            });
+            
+            saveEditedText.addEventListener('click', function() {
+                currentText = editedText.value;
+                extractedText.textContent = currentText;
+                bannerPreview.textContent = currentText || 'Your banner text will appear here';
+                editTextModal.hide();
+            });
+            
+            function handleImageUpload() {
+                if (!imageUpload.files || !imageUpload.files[0]) return;
+                
+                const file = imageUpload.files[0];
+                if (!file.type.match('image/jpeg') && !file.type.match('image/jpg') && !file.type.match('image/png')) {
+                    alert('Please upload a JPG or PNG image.');
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+                
+                // Upload to server
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                loadingIndicator.style.display = 'block';
+                analysisContainer.style.display = 'none';
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (data.success) {
+                        // Show analysis container
+                        analysisContainer.style.display = 'block';
+                        
+                        // Show extracted text
+                        currentText = data.extracted_text;
+                        extractedText.textContent = currentText;
+                        
+                        // Show spelling analysis for extracted text
+                        if (data.spelling_results && Array.isArray(data.spelling_results)) {
+                            spellingAnalysis.innerHTML = '';
+                            // Build a grid, but only for incorrect words
+                            const wordGrid = document.createElement('div');
+                            wordGrid.className = 'word-grid';
+                            
+                            // Filter to only show incorrect words
+                            const incorrectWords = data.spelling_results.filter(result => !result.is_correct);
+                            
+                            if (incorrectWords.length === 0) {
+                                spellingAnalysis.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> No spelling mistakes found!</div>';
+                            } else {
+                                // Add summary
+                                const summary = document.createElement('div');
+                                summary.className = 'results-summary';
+                                summary.innerHTML = `
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Found ${incorrectWords.length} spelling mistake${incorrectWords.length > 1 ? 's' : ''}
+                                    </div>
+                                `;
+                                spellingAnalysis.appendChild(summary);
+                                
+                                // Add each incorrect word to the grid
+                                incorrectWords.forEach(result => {
+                                    const wordItem = document.createElement('div');
+                                    wordItem.className = 'word-item incorrect';
+                                    const wordTitle = document.createElement('h4');
+                                    wordTitle.textContent = result.word;
+                                    const status = document.createElement('p');
+                                    status.innerHTML = '<span class="badge bg-danger">Incorrect</span>';
+                                    wordItem.appendChild(wordTitle);
+                                    wordItem.appendChild(status);
+                                    if (result.suggestion) {
+                                        const suggestion = document.createElement('p');
+                                        suggestion.innerHTML = `<strong>Correct spelling:</strong> <span class="suggestion">${result.suggestion}</span>`;
+                                        wordItem.appendChild(suggestion);
+                                    }
+                                    const fullResponseLower = result.full_response.toLowerCase().trim();
+                                    if (
+                                        fullResponseLower &&
+                                        fullResponseLower !== 'correct' &&
+                                        fullResponseLower !== 'incorrect' &&
+                                        !fullResponseLower.includes('fallback spell checker')
+                                    ) {
+                                        const response = document.createElement('p');
+                                        response.className = 'small text-muted';
+                                        response.textContent = result.full_response;
+                                        wordItem.appendChild(response);
+                                    } else if (result.full_response && !fullResponseLower.includes('correct')) {
+                                        const response = document.createElement('p');
+                                        response.className = 'small text-muted';
+                                        response.textContent = result.full_response;
+                                        wordItem.appendChild(response);
+                                    }
+                                    wordGrid.appendChild(wordItem);
+                                });
+                                spellingAnalysis.appendChild(wordGrid);
+                            }
+                        } else {
+                            spellingAnalysis.innerHTML = '<div class="alert alert-info">No spelling analysis available.</div>';
+                        }
+                        
+                        // Update banner preview
+                        bannerPreview.textContent = currentText || 'Your banner text will appear here';
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    loadingIndicator.style.display = 'none';
+                    console.error('Error:', error);
+                    alert('An error occurred while uploading the image.');
+                });
+            }
+            
+            // Show/hide banner preview and check button based on active tab
+            document.getElementById('text-tab').addEventListener('click', function() {
+                bannerPreview.style.display = 'flex';
+                checkSpellingBtn.style.display = 'block';
+            });
+            
+            document.getElementById('image-tab').addEventListener('click', function() {
+                bannerPreview.style.display = 'none';
+                checkSpellingBtn.style.display = 'none';
+            });
+            
+            // Initial state - check which tab is active on page load
+            if (document.getElementById('image-tab').classList.contains('active')) {
+                bannerPreview.style.display = 'none';
+                checkSpellingBtn.style.display = 'none';
+            }
+            
+            // Check spelling button click handler
+            checkSpellingBtn.addEventListener('click', function() {
+                const text = currentText.trim();
+                if (!text) {
+                    alert('Please enter some text or upload an image first');
+                    return;
+                }
+                
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                wordResults.innerHTML = '';
+                
+                // Send request to the server
+                fetch('/check_spelling', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (data.error) {
+                        wordResults.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                        return;
+                    }
+                    
+                    // Count correct and incorrect words
+                    const correctCount = data.filter(item => item.is_correct).length;
+                    const incorrectCount = data.length - correctCount;
+                    
+                    // Create results container
+                    const resultsContainer = document.createElement('div');
+                    resultsContainer.className = 'analysis-section';
+                    
+                    // Add summary
+                    const summary = document.createElement('div');
+                    summary.className = 'results-summary';
+                    summary.innerHTML = `
+                        <h5><i class="bi bi-check-circle-fill"></i> Spelling Check Results</h5>
+                        <div class="alert ${incorrectCount > 0 ? 'alert-warning' : 'alert-success'}">
+                            <p><strong>Total words:</strong> ${data.length}</p>
+                            <p><strong>Correct words:</strong> <span class="text-success">${correctCount}</span></p>
+                            <p><strong>Misspelled words:</strong> <span class="text-danger">${incorrectCount}</span></p>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(summary);
+                    
+                    // If there are incorrect words, show them
+                    if (incorrectCount > 0) {
+                        // Create word grid
+                        const wordGrid = document.createElement('div');
+                        wordGrid.className = 'word-grid';
+                        
+                        // Add only incorrect words to the grid
+                        data.filter(result => !result.is_correct).forEach(result => {
+                            const wordItem = document.createElement('div');
+                            wordItem.className = 'word-item incorrect';
+                            
+                            const wordTitle = document.createElement('h4');
+                            wordTitle.textContent = result.word;
+                            
+                            const status = document.createElement('p');
+                            status.innerHTML = '<span class="badge bg-danger">Incorrect</span>';
+                            
+                            wordItem.appendChild(wordTitle);
+                            wordItem.appendChild(status);
+                            
+                            if (result.suggestion) {
+                                const suggestion = document.createElement('p');
+                                suggestion.innerHTML = `<strong>Correct spelling:</strong> <span class="suggestion">${result.suggestion}</span>`;
+                                wordItem.appendChild(suggestion);
+                            }
+                            
+                            const fullResponseLower = result.full_response.toLowerCase().trim();
+                            if (
+                                fullResponseLower &&
+                                fullResponseLower !== 'correct' &&
+                                fullResponseLower !== 'incorrect' &&
+                                !fullResponseLower.includes('fallback spell checker')
+                            ) {
+                                const response = document.createElement('p');
+                                response.className = 'small text-muted';
+                                response.textContent = result.full_response;
+                                wordItem.appendChild(response);
+                            } else if (result.full_response && !fullResponseLower.includes('correct')) {
+                                const response = document.createElement('p');
+                                response.className = 'small text-muted';
+                                response.textContent = result.full_response;
+                                wordItem.appendChild(response);
+                            }
+                            
+                            wordGrid.appendChild(wordItem);
+                        });
+                        
+                        resultsContainer.appendChild(wordGrid);
+                    } else {
+                        // If no incorrect words, show a success message
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'alert alert-success';
+                        successMsg.innerHTML = '<i class="bi bi-check-circle-fill"></i> All words are spelled correctly!';
+                        resultsContainer.appendChild(successMsg);
+                    }
+                    
+                    wordResults.appendChild(resultsContainer);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingIndicator.style.display = 'none';
+                    wordResults.innerHTML = '<div class="alert alert-danger">An error occurred while checking spelling.</div>';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
