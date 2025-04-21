@@ -10,6 +10,7 @@ import json
 import logging
 import time
 import re
+import PyPDF2
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,7 +27,7 @@ model = genai.GenerativeModel('gemini-2.0-flash')  # Latest Gemini 2.5 Pro model
 
 # Configure upload folder
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'pdf'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Create upload directory if it doesn't exist
@@ -99,6 +100,24 @@ def basic_spell_check(word):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def extract_text_from_pdf(pdf_path):
+    """Extract text from a PDF file using PyPDF2"""
+    try:
+        logger.info(f"Extracting text from PDF: {pdf_path}")
+        
+        text = ""
+        with open(pdf_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            for page_num in range(len(pdf_reader.pages)):
+                page = pdf_reader.pages[page_num]
+                text += page.extract_text() + "\n"
+        
+        logger.info(f"Successfully extracted text from PDF")
+        return text.strip() or "No text detected in the PDF."
+    except Exception as e:
+        logger.error(f"Error extracting text from PDF: {e}")
+        return f"Error extracting text from PDF: {str(e)}"
 
 def extract_text_from_image_with_gemini(image_path):
     """Extract text from image using Gemini Vision API"""
@@ -309,8 +328,15 @@ def upload_file():
             file.save(filepath)
             logger.info(f"File saved to {filepath}")
             
-            # Extract text from the image using Gemini
-            extracted_text = extract_text_from_image_with_gemini(filepath)
+            # Extract text based on file type
+            file_extension = filename.rsplit('.', 1)[1].lower()
+            extracted_text = ""
+            
+            if file_extension == 'pdf':
+                extracted_text = extract_text_from_pdf(filepath)
+            else:
+                # For image files, use Gemini
+                extracted_text = extract_text_from_image_with_gemini(filepath)
             
             # Now, check spelling on the extracted text
             spelling_results = []

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Media Banner Spelling Checker</title>
+    <title>Social Media Banner & Document Spelling Checker</title>
     <link rel="icon" href="{{ url_for('static', filename='spell-check.png') }}" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -259,7 +259,7 @@
 <body>
     <div class="container">
         <div class="app-header">
-            <h1 class="app-title">Social Media Banner Spelling Checker <span class="ai-badge"><i class="bi bi-lightning-fill"></i>AI Powered</span></h1>
+            <h1 class="app-title">Social Media Banner & Document Spelling Checker <span class="ai-badge"><i class="bi bi-lightning-fill"></i>AI Powered</span></h1>
             <p class="app-subtitle">Check spelling in your social media content with advanced AI technology</p>
         </div>
         
@@ -272,7 +272,7 @@
                                 <button class="nav-link active" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-input" type="button" role="tab" aria-controls="text-input" aria-selected="true"><i class="bi bi-type"></i> Text Input</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="image-tab" data-bs-toggle="tab" data-bs-target="#image-input" type="button" role="tab" aria-controls="image-input" aria-selected="false"><i class="bi bi-image"></i> Image Upload</button>
+                                <button class="nav-link" id="image-tab" data-bs-toggle="tab" data-bs-target="#image-input" type="button" role="tab" aria-controls="image-input" aria-selected="false"><i class="bi bi-image"></i> Image & PDF Upload</button>
                             </li>
                         </ul>
                         
@@ -297,17 +297,17 @@
                                 <div class="instructions">
                                     <h5><i class="bi bi-info-circle"></i> How to use:</h5>
                                     <ol class="feature-list">
-                                        <li>Upload an image containing text (social media banner, ad, etc.)</li>
+                                        <li>Upload an image or PDF containing text (social media banner, ad, document, etc.)</li>
                                         <li>Our AI will extract the text automatically</li>
                                         <li>Review extracted text and spelling analysis</li>
                                     </ol>
                                 </div>
                                 <div class="upload-area" id="uploadArea">
-                                    <input type="file" id="imageUpload" accept=".jpg,.jpeg,.png" style="display: none;">
+                                    <input type="file" id="imageUpload" accept=".jpg,.jpeg,.png,.pdf" style="display: none;">
                                     <div>
                                         <i class="bi bi-cloud-arrow-up"></i>
                                         <p class="mb-2">Click to upload or drag and drop</p>
-                                        <p class="text-muted small">Supported formats: JPG, JPEG, PNG</p>
+                                        <p class="text-muted small">Supported formats: JPG, JPEG, PNG, PDF</p>
                                     </div>
                                 </div>
                                 <img id="imagePreview" class="image-preview" alt="Uploaded image preview">
@@ -463,8 +463,8 @@
                 if (!imageUpload.files || !imageUpload.files[0]) return;
                 
                 const file = imageUpload.files[0];
-                if (!file.type.match('image/jpeg') && !file.type.match('image/jpg') && !file.type.match('image/png')) {
-                    alert('Please upload a JPG or PNG image.');
+                if (!file.type.match('image/jpeg') && !file.type.match('image/jpg') && !file.type.match('image/png') && !file.type.match('application/pdf')) {
+                    alert('Please upload a JPG, JPEG, PNG or PDF file.');
                     return;
                 }
                 
@@ -473,6 +473,17 @@
                 reader.onload = function(e) {
                     imagePreview.src = e.target.result;
                     imagePreview.style.display = 'block';
+                    
+                    // Hide preview for PDF files
+                    if (file.type.match('application/pdf')) {
+                        imagePreview.style.display = 'none';
+                        // Show PDF upload notification
+                        const pdfNotification = document.createElement('div');
+                        pdfNotification.className = 'alert alert-info mt-3';
+                        pdfNotification.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> PDF file uploaded successfully. Processing...';
+                        document.querySelector('#image-input').insertBefore(pdfNotification, analysisContainer);
+                        setTimeout(() => pdfNotification.remove(), 5000); // Remove after 5 seconds
+                    }
                 };
                 reader.readAsDataURL(file);
                 
