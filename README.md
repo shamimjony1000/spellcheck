@@ -17,6 +17,9 @@ An AI-powered spelling checker application that helps identify and correct spell
 - **AI Integration**: Google's Gemini AI API
 - **Image Processing**: PIL (Python Imaging Library)
 
+## Live Demo
+https://spellcheck.parviit.com
+
 ## Installation
 
 1. Clone the repository:
