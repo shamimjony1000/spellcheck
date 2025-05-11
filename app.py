@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Configure the Gemini API
-API_KEY = "AIzaSyA8k5-cC2WGEbgo6S-zuxPNcj8MmxBiVkU"
+API_KEY = ""
 genai.configure(api_key=API_KEY)
 
 # Initialize Gemini models - use the latest Gemini 2.5 Pro model
